@@ -120,7 +120,7 @@ class CustomRedirects(TestCase):
         Person.objects.create(name='John Doe')
         self.assertEqual(Person.objects.count(), 1)
         person = Person.objects.all()[0]
-        post_data = {'name': 'Jack Doe'}
+        post_data = {'name': 'Jack Doe', 'lock_version': 0}
         response = self.client.post(
             reverse('admin:admin_custom_urls_person_change', args=[person.pk]), post_data)
         self.assertRedirects(

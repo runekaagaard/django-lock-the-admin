@@ -90,6 +90,7 @@ class GenericAdminViewTest(TestCase):
             "generic_inline_admin-media-content_type-object_id-1-url": "http://example.com/logo.png",
             "generic_inline_admin-media-content_type-object_id-2-id": "",
             "generic_inline_admin-media-content_type-object_id-2-url": "",
+            "lock_version": "0",
         }
         url = '/generic_inline_admin/admin/generic_inline_admin/episode/%d/' % self.episode_pk
         response = self.client.post(url, post_data)

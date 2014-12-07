@@ -834,6 +834,7 @@ class ChangelistTests(AuthViewsTestCase):
             'initial-date_joined_1': user.date_joined.strftime('%H:%M:%S'),
             'first_name': user.first_name,
             'last_name': user.last_name,
+            'lock_version': 0,
         }
 
     # #20078 - users shouldn't be allowed to guess password hashes via

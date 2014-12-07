@@ -449,6 +449,7 @@ class TestInlineProtectedOnDelete(TestCase):
         response = self.client.get(change_url)
         data = {
             'name': lotr.name,
+            'lock_version': 0,
             'chapter_set-TOTAL_FORMS': 1,
             'chapter_set-INITIAL_FORMS': 1,
             'chapter_set-MAX_NUM_FORMS': 1000,
@@ -456,6 +457,7 @@ class TestInlineProtectedOnDelete(TestCase):
             'chapter_set-0-id': chapter.id,
             'chapter_set-0-name': chapter.name,
             'chapter_set-0-novel': lotr.id,
+            'chapter_set-0-lock_version': 0,
             'chapter_set-0-DELETE': 'on'
         }
         response = self.client.post(change_url, data)

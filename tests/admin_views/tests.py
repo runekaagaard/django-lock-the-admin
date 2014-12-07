@@ -189,6 +189,7 @@ class AdminViewBasicTest(AdminViewBasicTestCase):
     # Post data for edit inline
     inline_post_data = {
         "name": "Test section",
+        "lock_version": "0",
         # inline data
         "article_set-TOTAL_FORMS": "6",
         "article_set-INITIAL_FORMS": "3",
@@ -200,31 +201,37 @@ class AdminViewBasicTest(AdminViewBasicTestCase):
         "article_set-0-date_0": "2008-03-18",
         "article_set-0-date_1": "11:54:58",
         "article_set-0-section": "1",
+        "article_set-0-lock_version": "0",
         "article_set-1-id": "2",
         "article_set-1-title": "Need a title.",
         "article_set-1-content": "&lt;p&gt;Oldest content&lt;/p&gt;",
         "article_set-1-date_0": "2000-03-18",
         "article_set-1-date_1": "11:54:58",
+        "article_set-1-lock_version": "0",
         "article_set-2-id": "3",
         "article_set-2-title": "Need a title.",
         "article_set-2-content": "&lt;p&gt;Newest content&lt;/p&gt;",
         "article_set-2-date_0": "2009-03-18",
         "article_set-2-date_1": "11:54:58",
+        "article_set-2-lock_version": "0",
         "article_set-3-id": "",
         "article_set-3-title": "",
         "article_set-3-content": "",
         "article_set-3-date_0": "",
         "article_set-3-date_1": "",
+        "article_set-3-lock_version": "0",
         "article_set-4-id": "",
         "article_set-4-title": "",
         "article_set-4-content": "",
         "article_set-4-date_0": "",
         "article_set-4-date_1": "",
+        "article_set-4-lock_version": "0",
         "article_set-5-id": "",
         "article_set-5-title": "",
         "article_set-5-content": "",
         "article_set-5-date_0": "",
         "article_set-5-date_1": "",
+        "article_set-5-lock_version": "0",
     }
 
     def test_basic_edit_POST(self):
@@ -750,7 +757,7 @@ class AdminViewBasicTest(AdminViewBasicTestCase):
         color_id = color2_addition_log.object_id
         color2_change_url = reverse('admin:admin_views_color2_change', args=(color_id,))
 
-        self.client.post(color2_change_url, {'value': 'blue'})
+        self.client.post(color2_change_url, {'value': 'blue', 'lock_version': '0'})
 
         color2_change_log = LogEntry.objects.all()[0]
         self.assertEqual(color2_content_type, color2_change_log.content_type)
@@ -1306,6 +1313,7 @@ class AdminViewPermissionsTest(TestCase):
         self.assertEqual(response.status_code, 200)
         response = self.client.get('/test_admin/admin/admin_views/article/1/')
         self.assertEqual(response.status_code, 200)
+        change_dict['lock_version'] = '0'
         post = self.client.post('/test_admin/admin/admin_views/article/1/', change_dict)
         self.assertRedirects(post, '/test_admin/admin/admin_views/article/')
         self.assertEqual(Article.objects.get(pk=1).content, '<p>edited article</p>')
@@ -1325,7 +1333,7 @@ class AdminViewPermissionsTest(TestCase):
         # Test redirection when using row-level change permissions. Refs #11513.
         RowLevelChangePermissionModel.objects.create(id=1, name="odd id")
         RowLevelChangePermissionModel.objects.create(id=2, name="even id")
-        for login_dict in [self.super_login, self.changeuser_login, self.adduser_login, self.deleteuser_login]:
+        for i, login_dict in enumerate([self.super_login, self.changeuser_login, self.adduser_login, self.deleteuser_login]):
             self.client.post(login_url, login_dict)
             response = self.client.get('/test_admin/admin/admin_views/rowlevelchangepermissionmodel/1/')
             self.assertEqual(response.status_code, 403)
@@ -1334,7 +1342,7 @@ class AdminViewPermissionsTest(TestCase):
             self.assertEqual(response.status_code, 403)
             response = self.client.get('/test_admin/admin/admin_views/rowlevelchangepermissionmodel/2/')
             self.assertEqual(response.status_code, 200)
-            response = self.client.post('/test_admin/admin/admin_views/rowlevelchangepermissionmodel/2/', {'name': 'changed'})
+            response = self.client.post('/test_admin/admin/admin_views/rowlevelchangepermissionmodel/2/', {'name': 'changed', 'lock_version': str(i)})
             self.assertEqual(RowLevelChangePermissionModel.objects.get(id=2).name, 'changed')
             self.assertRedirects(response, '/test_admin/admin/')
             self.client.get('/test_admin/admin/logout/')
@@ -1999,6 +2007,7 @@ class AdminViewUnicodeTest(TestCase):
         """
         post_data = {
             "name": "Test lærdommer",
+            "lock_version": "0",
             # inline data
             "chapter_set-TOTAL_FORMS": "6",
             "chapter_set-INITIAL_FORMS": "3",
@@ -2006,12 +2015,15 @@ class AdminViewUnicodeTest(TestCase):
             "chapter_set-0-id": "1",
             "chapter_set-0-title": "Norske bostaver æøå skaper problemer",
             "chapter_set-0-content": "&lt;p&gt;Svært frustrerende med UnicodeDecodeError&lt;/p&gt;",
+            "chapter_set-0-lock_version": "0",
             "chapter_set-1-id": "2",
             "chapter_set-1-title": "Kjærlighet.",
             "chapter_set-1-content": "&lt;p&gt;La kjærligheten til de lidende seire.&lt;/p&gt;",
+            "chapter_set-1-lock_version": "0",
             "chapter_set-2-id": "3",
             "chapter_set-2-title": "Need a title.",
             "chapter_set-2-content": "&lt;p&gt;Newest content&lt;/p&gt;",
+            "chapter_set-2-lock_version": "0",
             "chapter_set-3-id": "",
             "chapter_set-3-title": "",
             "chapter_set-3-content": "",
@@ -2562,6 +2574,7 @@ class AdminInheritedInlinesTest(TestCase):
 
         post_data = {
             "name": "Test Name",
+            "lock_version": "0",
 
             "accounts-TOTAL_FORMS": "2",
             "accounts-INITIAL_FORMS": "1",
@@ -2570,6 +2583,7 @@ class AdminInheritedInlinesTest(TestCase):
             "accounts-0-username": "%s-1" % foo_user,
             "accounts-0-account_ptr": str(foo_id),
             "accounts-0-persona": str(persona_id),
+            "accounts-0-lock_version": "0",
 
             "accounts-2-TOTAL_FORMS": "2",
             "accounts-2-INITIAL_FORMS": "1",
@@ -2578,6 +2592,7 @@ class AdminInheritedInlinesTest(TestCase):
             "accounts-2-0-username": "%s-1" % bar_user,
             "accounts-2-0-account_ptr": str(bar_id),
             "accounts-2-0-persona": str(persona_id),
+            "accounts-2-0-lock_version": "0",
         }
         response = self.client.post('/test_admin/admin/admin_views/persona/%d/' % persona_id, post_data)
         self.assertEqual(response.status_code, 302)
@@ -3057,6 +3072,7 @@ class AdminCustomQuerysetTest(TestCase):
         # Emulate model instance edit via the admin
         post_data = {
             "author": "John Doe II",
+            "lock_version": "0",
             "_save": "Save",
         }
         response = self.client.post('/test_admin/admin/admin_views/coverletter/%s/' % cl.pk,
@@ -3079,6 +3095,7 @@ class AdminCustomQuerysetTest(TestCase):
         # Emulate model instance edit via the admin
         post_data = {
             "content": "Too expensive",
+            "lock_version": "0",
             "_save": "Save",
         }
         response = self.client.post('/test_admin/admin/admin_views/shortmessage/%s/' % sm.pk,
@@ -3104,6 +3121,7 @@ class AdminCustomQuerysetTest(TestCase):
         # Emulate model instance edit via the admin
         post_data = {
             "title": "Telegram without typo",
+            "lock_version": "0",
             "_save": "Save",
         }
         response = self.client.post('/test_admin/admin/admin_views/telegram/%s/' % t.pk,
@@ -3126,6 +3144,7 @@ class AdminCustomQuerysetTest(TestCase):
         # Emulate model instance edit via the admin
         post_data = {
             "title": "My Modified Paper Title",
+            "lock_version": "0",
             "_save": "Save",
         }
         response = self.client.post('/test_admin/admin/admin_views/paper/%s/' % p.pk,
@@ -3186,6 +3205,7 @@ class AdminInlineFileUploadTest(TestCase):
         """
         post_data = {
             "name": "Test Gallery",
+            "lock_version": "0",
             "pictures-TOTAL_FORMS": "2",
             "pictures-INITIAL_FORMS": "1",
             "pictures-MAX_NUM_FORMS": "0",
@@ -3193,10 +3213,12 @@ class AdminInlineFileUploadTest(TestCase):
             "pictures-0-gallery": six.text_type(self.gallery.id),
             "pictures-0-name": "Test Picture",
             "pictures-0-image": "",
+            "pictures-0-lock_version": "0",
             "pictures-1-id": "",
             "pictures-1-gallery": str(self.gallery.id),
             "pictures-1-name": "Test Picture 2",
             "pictures-1-image": "",
+            "pictures-1-lock_version": "0",
         }
         response = self.client.post('/test_admin/%s/admin_views/gallery/%d/' % (self.urlbit, self.gallery.id), post_data)
         self.assertContains(response, b"Currently")
@@ -3305,6 +3327,7 @@ class AdminInlineTests(TestCase):
         "A simple model can be saved as inlines"
         # First add a new inline
         self.post_data['widget_set-0-name'] = "Widget 1"
+        self.post_data['lock_version'] = "0"
         collector_url = '/test_admin/admin/admin_views/collector/%d/' % self.collector.pk
         response = self.client.post(collector_url, self.post_data)
         self.assertEqual(response.status_code, 302)
@@ -3320,6 +3343,8 @@ class AdminInlineTests(TestCase):
         self.post_data['widget_set-INITIAL_FORMS'] = "1"
         self.post_data['widget_set-0-id'] = str(widget_id)
         self.post_data['widget_set-0-name'] = "Widget 1"
+        self.post_data['widget_set-0-lock_version'] = "0"
+        self.post_data['lock_version'] = "1"
         response = self.client.post(collector_url, self.post_data)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Widget.objects.count(), 1)
@@ -3329,6 +3354,8 @@ class AdminInlineTests(TestCase):
         self.post_data['widget_set-INITIAL_FORMS'] = "1"
         self.post_data['widget_set-0-id'] = str(widget_id)
         self.post_data['widget_set-0-name'] = "Widget 1 Updated"
+        self.post_data['widget_set-0-lock_version'] = "0"
+        self.post_data['lock_version'] = "2"
         response = self.client.post(collector_url, self.post_data)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Widget.objects.count(), 1)
@@ -3338,6 +3365,7 @@ class AdminInlineTests(TestCase):
         "A model with an explicit autofield primary key can be saved as inlines. Regression for #8093"
         # First add a new inline
         self.post_data['grommet_set-0-name'] = "Grommet 1"
+        self.post_data['lock_version'] = "0"
         collector_url = '/test_admin/admin/admin_views/collector/%d/' % self.collector.pk
         response = self.client.post(collector_url, self.post_data)
         self.assertEqual(response.status_code, 302)
@@ -3352,6 +3380,8 @@ class AdminInlineTests(TestCase):
         self.post_data['grommet_set-INITIAL_FORMS'] = "1"
         self.post_data['grommet_set-0-code'] = str(Grommet.objects.all()[0].code)
         self.post_data['grommet_set-0-name'] = "Grommet 1"
+        self.post_data['grommet_set-0-lock_version'] = "0"
+        self.post_data['lock_version'] = "1"
         response = self.client.post(collector_url, self.post_data)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Grommet.objects.count(), 1)
@@ -3361,6 +3391,8 @@ class AdminInlineTests(TestCase):
         self.post_data['grommet_set-INITIAL_FORMS'] = "1"
         self.post_data['grommet_set-0-code'] = str(Grommet.objects.all()[0].code)
         self.post_data['grommet_set-0-name'] = "Grommet 1 Updated"
+        self.post_data['grommet_set-0-lock_version'] = "0"
+        self.post_data['lock_version'] = "2"
         response = self.client.post(collector_url, self.post_data)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Grommet.objects.count(), 1)
@@ -3371,6 +3403,7 @@ class AdminInlineTests(TestCase):
         # First add a new inline
         self.post_data['doohickey_set-0-code'] = "DH1"
         self.post_data['doohickey_set-0-name'] = "Doohickey 1"
+        self.post_data['lock_version'] = "0"
         collector_url = '/test_admin/admin/admin_views/collector/%d/' % self.collector.pk
         response = self.client.post(collector_url, self.post_data)
         self.assertEqual(response.status_code, 302)
@@ -3385,6 +3418,8 @@ class AdminInlineTests(TestCase):
         self.post_data['doohickey_set-INITIAL_FORMS'] = "1"
         self.post_data['doohickey_set-0-code'] = "DH1"
         self.post_data['doohickey_set-0-name'] = "Doohickey 1"
+        self.post_data['doohickey_set-0-lock_version'] = "0"
+        self.post_data['lock_version'] = "1"
         response = self.client.post(collector_url, self.post_data)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(DooHickey.objects.count(), 1)
@@ -3394,6 +3429,8 @@ class AdminInlineTests(TestCase):
         self.post_data['doohickey_set-INITIAL_FORMS'] = "1"
         self.post_data['doohickey_set-0-code'] = "DH1"
         self.post_data['doohickey_set-0-name'] = "Doohickey 1 Updated"
+        self.post_data['doohickey_set-0-lock_version'] = "0"
+        self.post_data['lock_version'] = "2"
         response = self.client.post(collector_url, self.post_data)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(DooHickey.objects.count(), 1)
@@ -3404,6 +3441,7 @@ class AdminInlineTests(TestCase):
         # First add a new inline
         self.post_data['whatsit_set-0-index'] = "42"
         self.post_data['whatsit_set-0-name'] = "Whatsit 1"
+        self.post_data['lock_version'] = "0"
         response = self.client.post('/test_admin/admin/admin_views/collector/1/', self.post_data)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Whatsit.objects.count(), 1)
@@ -3417,6 +3455,8 @@ class AdminInlineTests(TestCase):
         self.post_data['whatsit_set-INITIAL_FORMS'] = "1"
         self.post_data['whatsit_set-0-index'] = "42"
         self.post_data['whatsit_set-0-name'] = "Whatsit 1"
+        self.post_data['whatsit_set-0-lock_version'] = "0"
+        self.post_data['lock_version'] = "1"
         response = self.client.post('/test_admin/admin/admin_views/collector/1/', self.post_data)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Whatsit.objects.count(), 1)
@@ -3426,6 +3466,8 @@ class AdminInlineTests(TestCase):
         self.post_data['whatsit_set-INITIAL_FORMS'] = "1"
         self.post_data['whatsit_set-0-index'] = "42"
         self.post_data['whatsit_set-0-name'] = "Whatsit 1 Updated"
+        self.post_data['whatsit_set-0-lock_version'] = "0"
+        self.post_data['lock_version'] = "2"
         response = self.client.post('/test_admin/admin/admin_views/collector/1/', self.post_data)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Whatsit.objects.count(), 1)
@@ -3435,6 +3477,7 @@ class AdminInlineTests(TestCase):
         "An inherited model can be saved as inlines. Regression for #11042"
         # First add a new inline
         self.post_data['fancydoodad_set-0-name'] = "Fancy Doodad 1"
+        self.post_data['lock_version'] = "0"
         collector_url = '/test_admin/admin/admin_views/collector/%d/' % self.collector.pk
         response = self.client.post(collector_url, self.post_data)
         self.assertEqual(response.status_code, 302)
@@ -3450,6 +3493,8 @@ class AdminInlineTests(TestCase):
         self.post_data['fancydoodad_set-INITIAL_FORMS'] = "1"
         self.post_data['fancydoodad_set-0-doodad_ptr'] = str(doodad_pk)
         self.post_data['fancydoodad_set-0-name'] = "Fancy Doodad 1"
+        self.post_data['fancydoodad_set-0-lock_version'] = "0"
+        self.post_data['lock_version'] = "1"
         response = self.client.post(collector_url, self.post_data)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(FancyDoodad.objects.count(), 1)
@@ -3459,6 +3504,8 @@ class AdminInlineTests(TestCase):
         self.post_data['fancydoodad_set-INITIAL_FORMS'] = "1"
         self.post_data['fancydoodad_set-0-doodad_ptr'] = str(doodad_pk)
         self.post_data['fancydoodad_set-0-name'] = "Fancy Doodad 1 Updated"
+        self.post_data['fancydoodad_set-0-lock_version'] = "0"
+        self.post_data['lock_version'] = "2"
         response = self.client.post(collector_url, self.post_data)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(FancyDoodad.objects.count(), 1)
@@ -3476,6 +3523,7 @@ class AdminInlineTests(TestCase):
         # NB: The order values must be changed so that the items are reordered.
         self.post_data.update({
             "name": "Frederick Clegg",
+            "lock_version": "0",
 
             "category_set-TOTAL_FORMS": "7",
             "category_set-INITIAL_FORMS": "4",
@@ -3484,18 +3532,22 @@ class AdminInlineTests(TestCase):
             "category_set-0-order": "14",
             "category_set-0-id": "1",
             "category_set-0-collector": "1",
+            "category_set-0-lock_version": "0",
 
             "category_set-1-order": "13",
             "category_set-1-id": "2",
             "category_set-1-collector": "1",
+            "category_set-1-lock_version": "0",
 
             "category_set-2-order": "1",
             "category_set-2-id": "3",
             "category_set-2-collector": "1",
+            "category_set-2-lock_version": "0",
 
             "category_set-3-order": "0",
             "category_set-3-id": "4",
             "category_set-3-collector": "1",
+            "category_set-3-lock_version": "0",
 
             "category_set-4-order": "",
             "category_set-4-id": "",
@@ -4167,7 +4219,7 @@ class UserAdminTest(TestCase):
         # Don't depend on a warm cache, see #17377.
         ContentType.objects.clear_cache()
 
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(14):
             response = self.client.get('/test_admin/admin/auth/user/%s/' % u.pk)
             self.assertEqual(response.status_code, 200)
 
@@ -4204,7 +4256,7 @@ class GroupAdminTest(TestCase):
 
     def test_group_permission_performance(self):
         g = Group.objects.create(name="test_group")
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(12):
             response = self.client.get('/test_admin/admin/auth/group/%s/' % g.pk)
             self.assertEqual(response.status_code, 200)
 
@@ -4559,13 +4611,16 @@ class AdminCustomSaveRelatedTests(TestCase):
         paul = Child.objects.create(parent=parent, name='Paul')
         catherine = Child.objects.create(parent=parent, name='Catherine')
         post = {
+            'lock_version': '0',
             'child_set-TOTAL_FORMS': '5',
             'child_set-INITIAL_FORMS': '2',
             'name': 'Josh Stone',
             'child_set-0-name': 'Paul',
             'child_set-0-id': paul.id,
+            'child_set-0-lock_version': '0',
             'child_set-1-name': 'Catherine',
             'child_set-1-id': catherine.id,
+            'child_set-1-lock_version': '0',
         }
         self.client.post('/test_admin/admin/admin_views/parent/%s/' % parent.id, post)
 
@@ -4849,6 +4904,7 @@ class AdminKeepChangeListFiltersTests(TestCase):
             'last_login_1': '13:20:10',
             'date_joined_0': '2007-05-30',
             'date_joined_1': '13:20:10',
+            'lock_version': '0',
         }
 
         post_data['_save'] = 1
@@ -4862,6 +4918,7 @@ class AdminKeepChangeListFiltersTests(TestCase):
 
         # Test redirect on "Save and continue".
         post_data['_continue'] = 1
+        post_data['lock_version'] = '1'
         response = self.client.post(self.get_change_url(), data=post_data)
         self.assertEqual(response.status_code, 302)
         self.assertURLEqual(
@@ -4872,6 +4929,7 @@ class AdminKeepChangeListFiltersTests(TestCase):
 
         # Test redirect on "Save and add new".
         post_data['_addanother'] = 1
+        post_data['lock_version'] = '2'
         response = self.client.post(self.get_change_url(), data=post_data)
         self.assertEqual(response.status_code, 302)
         self.assertURLEqual(
