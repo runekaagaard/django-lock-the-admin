@@ -16,6 +16,7 @@
   {% endfor %}
   {% if inline_admin_form.needs_explicit_pk_field %}{{ inline_admin_form.pk_field.field }}{% endif %}
   {{ inline_admin_form.fk_field.field }}
+  {% if inline_admin_form.original %}{{ inline_admin_form.lock_version_field.field }}{% endif %}
 </div>{% endfor %}
 </div>
 

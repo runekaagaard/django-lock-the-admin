@@ -11,7 +11,10 @@ from django.contrib.admin import widgets, helpers
 from django.contrib.admin import validation
 from django.contrib.admin.checks import (BaseModelAdminChecks, ModelAdminChecks,
     InlineModelAdminChecks)
-from django.contrib.admin.exceptions import DisallowedModelAdminToField
+from django.contrib.admin.exceptions import (DisallowedModelAdminToField,
+    StaleObjectError)
+from django.contrib.admin import locking
+from django.contrib.admin.locking import LOCK_VERSION_FIELD_NAME
 from django.contrib.admin.utils import (quote, unquote, flatten_fieldsets,
     get_deleted_objects, model_format_dict, NestedObjects,
     lookup_needs_distinct)
@@ -1421,15 +1424,31 @@ class ModelAdmin(BaseModelAdmin):
                 new_object = form.instance
             formsets, inline_instances = self._create_formsets(request, new_object)
             if all_valid(formsets) and form_validated:
-                self.save_model(request, new_object, form, not add)
-                self.save_related(request, form, formsets, not add)
-                if add:
-                    self.log_addition(request, new_object)
-                    return self.response_add(request, new_object)
-                else:
-                    change_message = self.construct_change_message(request, form, formsets)
-                    self.log_change(request, new_object, change_message)
-                    return self.response_change(request, new_object)
+                try:
+                    with transaction.atomic():
+                        save_model = lambda: self.save_model(request,
+                            new_object, form, not add)
+                        if add:
+                            save_model()
+                        else:
+                            locking.save(save_model, new_object,
+                                locking.read_lock_version(request.POST))
+                        self.save_related(request, form, formsets, not add)
+
+                        if add:
+                            self.log_addition(request, new_object)
+                            return self.response_add(request, new_object)
+                        else:
+                            change_message = self.construct_change_message(
+                                request, form, formsets)
+                            self.log_change(request, new_object, change_message)
+                            return self.response_change(request, new_object)
+                except StaleObjectError:
+                    locking_error_message = locking.error_message(new_object,
+                        locking.read_lock_version(request.POST), formsets,
+                        self.admin_site)
+                    self.message_user(request, locking_error_message,
+                                      messages.ERROR)
         else:
             if add:
                 initial = self.get_changeform_initial_data(request)
@@ -1463,6 +1482,8 @@ class ModelAdmin(BaseModelAdmin):
             inline_admin_formsets=inline_formsets,
             errors=helpers.AdminErrorList(form, formsets),
             preserved_filters=self.get_preserved_filters(request),
+            lock_version=locking.get_version(obj),
+            lock_version_field_name=LOCK_VERSION_FIELD_NAME,
         )
 
         context.update(extra_context or {})
@@ -1826,9 +1847,10 @@ class InlineModelAdmin(BaseModelAdmin):
         # default.
         exclude = exclude or None
         can_delete = self.can_delete and self.has_delete_permission(request, obj)
+
         defaults = {
-            "form": self.form,
-            "formset": self.formset,
+            "form": locking.extend_formset_form(self.form),
+            "formset": locking.extend_formset(self.formset),
             "fk_name": self.fk_name,
             "fields": fields,
             "exclude": exclude,

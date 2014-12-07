@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import warnings
 
 from django import forms
+from django.contrib.admin.locking import LOCK_VERSION_FIELD_NAME
 from django.contrib.admin.utils import (flatten_fieldsets, lookup_field,
     display_for_field, label_for_field, help_text_for_field)
 from django.contrib.admin.templatetags.admin_static import static
@@ -340,6 +341,13 @@ class InlineAdminForm(AdminForm):
         from django.forms.formsets import ORDERING_FIELD_NAME
         return AdminField(self.form, ORDERING_FIELD_NAME, False)
 
+    def lock_version_field(self):
+        try:
+            return AdminField(self.form, LOCK_VERSION_FIELD_NAME, False)
+        except KeyError:
+            # Generic inlines are not hitting the "ModelAdmin.changelist_view"
+            # method but might still use the "admin/change_form.html" template.
+            return ''
 
 class InlineFieldset(Fieldset):
     def __init__(self, formset, *args, **kwargs):

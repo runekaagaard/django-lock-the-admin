@@ -82,3 +82,24 @@ class LogEntry(models.Model):
             except NoReverseMatch:
                 pass
         return None
+
+
+@python_2_unicode_compatible
+class Lock(models.Model):
+    content_type = models.ForeignKey(ContentType)
+    object_id = models.TextField(_('Object id'))
+    version = models.IntegerField(_('Version Number'), default=0)
+
+    class Meta:
+        verbose_name = _('Lock')
+        verbose_name_plural = _('Locks')
+        unique_together = ('content_type', 'object_id')
+
+    def __repr__(self):
+        s = '<{}: content_type={}, obj_id={}, version={}>'
+        return smart_text(s.format(self.__class__.__name__,
+                                   self.content_type.name, self.object_id,
+                                   self.version))
+
+    def __str__(self):
+        return smart_text(self.object_id)

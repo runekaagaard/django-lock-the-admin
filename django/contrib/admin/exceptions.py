@@ -9,3 +9,8 @@ class DisallowedModelAdminLookup(SuspiciousOperation):
 class DisallowedModelAdminToField(SuspiciousOperation):
     """Invalid to_field was passed to admin view via URL query string"""
     pass
+
+
+class StaleObjectError(Exception):
+    """The object was saved by another process since it was loaded."""
+    pass
